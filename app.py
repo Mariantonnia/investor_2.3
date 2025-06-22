@@ -245,15 +245,13 @@ else:
                                      ["Sí", "No"], 
                                      index=None)
             if sostenibilidad == "Sí":
-                    fondo_clima = st.radio("6.2. ¿Preferirías un fondo que invierte en empresas contra el cambio climático aunque la rentabilidad sea menor?", 
-                                       ["Sí", "No"], 
+                    fondo_clima = st.radio("6.2. ¿Cual de los siguientes aspectos te interesan que se tengan en cuenta?", 
+                                       ["Relacionadas con el clima y el medioambiente", "Relacionadas con asuntos sociales y de gobernanza", "Ambas"], 
                                        index=None)
-            fondo_clima = st.radio("6.2. ¿Preferirías un fondo que invierte en empresas contra el cambio climático aunque la rentabilidad sea menor?", 
-                                 ["Sí", "No"], 
-                                 index=None)
-            importancia = st.radio("6.3. ¿Qué importancia das a no financiar sectores controvertidos?", 
-                                 ["Alta", "Media", "Baja"], 
-                                 index=None)
+                    porcentaje = st.radio("6.3. ¿Quieres incluir en tu cartera inversiones ESG?", 
+                                           ["Si, al menos un 5%", "Si, al menos un 15%", "Si, al menos un 35%", "No"], 
+                                           index=None)
+           
 
             enviar = st.form_submit_button("Enviar respuestas")
 
