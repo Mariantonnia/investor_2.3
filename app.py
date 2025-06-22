@@ -231,7 +231,7 @@ else:
                                 ["Menos del 25%", "Entre el 25% y el 50%", "Más del 50%"], 
                                 index=None)
             
-            patrimonio 2 = st.radio("4.2. ¿Qué porcentaje de sus inversiones cree que va a necesitar en un periodo de un año?", 
+            patrimonio por = st.radio("4.2. ¿Qué porcentaje de sus inversiones cree que va a necesitar en un periodo de un año?", 
                                 ["Menos del 25%", "Entre el 25% y el 50%", "Más del 50%"], 
                                 index=None)
             
