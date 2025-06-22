@@ -269,9 +269,9 @@ else:
                         str(st.session_state.perfil_valores.get("Social", "")),
                         str(st.session_state.perfil_valores.get("Gobernanza", "")),
                         str(st.session_state.perfil_valores.get("Riesgo", "")),
-                        objetivo or "", horizonte or "", productos_str, volatilidad or "", largo_plazo or "",
-                        frecuencia or "", experiencia or "", reaccion_20 or "", combinacion or "",
-                        sostenibilidad or "", fondo_clima or "", importancia or ""
+                        objetivo or "", horizonte or "", formación or "", cargo or "", conocimiento or "",
+                        productos  or "", productos_str  or "", volatilidad  or "", corto_plazo  or "",
+                        patrimonio  or "", necesidad  or "", edad  or "", sostenibilidad or "", fondo_clima or "", porcentaje or ""
                     ]
 
                     sheet.append_row(fila)
