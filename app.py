@@ -244,11 +244,11 @@ else:
             sostenibilidad = st.radio("6.1. ¿Te interesa que tus inversiones consideren criterios de sostenibilidad?", 
                                      ["Sí", "No"], 
                                      index=None)
-            if sostenibilidad == "Sí":
-                    fondo_clima = st.radio("6.2. ¿Cual de los siguientes aspectos te interesan que se tengan en cuenta?", 
-                                       ["Relacionadas con el clima y el medioambiente", "Relacionadas con asuntos sociales y de gobernanza", "Ambas"], 
+            
+            fondo_clima = st.radio("6.2. ¿Cual de los siguientes aspectos te interesan que se tengan en cuenta?", 
+                                       ["Relacionadas con el clima y el medioambiente", "Relacionadas con asuntos sociales y de gobernanza", "Ambas","Ninguna"], 
                                        index=None)
-                    porcentaje = st.radio("6.3. ¿Quieres incluir en tu cartera inversiones ESG?", 
+            porcentaje = st.radio("6.3. ¿Quieres incluir en tu cartera inversiones ESG?", 
                                            ["Si, al menos un 5%", "Si, al menos un 15%", "Si, al menos un 35%", "No"], 
                                            index=None)
            
