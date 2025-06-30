@@ -237,11 +237,11 @@ else:
             st.warning("No se pudo generar un perfil detallado. Por favor, asegúrese de proporcionar respuestas más completas.")
 
     # Mostrar perfil y gráfico siempre
-    with st.chat_message("bot", avatar="🤖"):
-        st.write(f"**Perfil del inversor:** Ambiental: {st.session_state.perfil_valores['Ambiental']}, " +
-                 f"Social: {st.session_state.perfil_valores['Social']}, " +
-                 f"Gobernanza: {st.session_state.perfil_valores['Gobernanza']}, " +
-                 f"Riesgo: {st.session_state.perfil_valores['Aversión al Riesgo']}")
+    #with st.chat_message("bot", avatar="🤖"):
+     #   st.write(f"**Perfil del inversor:** Ambiental: {st.session_state.perfil_valores['Ambiental']}, " +
+      #           f"Social: {st.session_state.perfil_valores['Social']}, " +
+       #          f"Gobernanza: {st.session_state.perfil_valores['Gobernanza']}, " +
+        #         f"Riesgo: {st.session_state.perfil_valores['Aversión al Riesgo']}")
 
     fig, ax = plt.subplots()
     ax.bar(st.session_state.perfil_valores.keys(), st.session_state.perfil_valores.values(), color="skyblue")
