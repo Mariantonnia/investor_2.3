@@ -1,7 +1,9 @@
 import streamlit as st
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from langchain import LLMChain, PromptTemplate
+# Actualizar importaciones de langchain
+from langchain.chains import LLMChain
+from langchain_core.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 import os
 import re
@@ -215,11 +217,20 @@ else:
         analisis_total = "\n".join(st.session_state.reacciones)
         perfil = cadena_perfil.run(analisis=analisis_total)
 
+        # IMPRIMIR LA SALIDA DEL LLM PARA DEPURACIÓN
+        st.write(f"Raw profile output from LLM: {perfil}")
+
+        # Se añade un manejo de errores para cada búsqueda de expresión regular
+        ambiental_match = re.search(r"Ambiental: (\d+)", perfil)
+        social_match = re.search(r"Social: (\d+)", perfil)
+        gobernanza_match = re.search(r"Gobernanza: (\d+)", perfil)
+        riesgo_match = re.search(r"Riesgo: (\d+)", perfil)
+
         puntuaciones = {
-            "Ambiental": int(re.search(r"Ambiental: (\d+)", perfil).group(1)),
-            "Social": int(re.search(r"Social: (\d+)", perfil).group(1)),
-            "Gobernanza": int(re.search(r"Gobernanza: (\d+)", perfil).group(1)),
-            "Riesgo": int(re.search(r"Riesgo: (\d+)", perfil).group(1)),
+            "Ambiental": int(ambiental_match.group(1)) if ambiental_match else 0,
+            "Social": int(social_match.group(1)) if social_match else 0,
+            "Gobernanza": int(gobernanza_match.group(1)) if gobernanza_match else 0,
+            "Aversión al Riesgo": int(riesgo_match.group(1)) if riesgo_match else 0,
         }
         st.session_state.perfil_valores = puntuaciones
     # Mostrar perfil y gráfico siempre
@@ -227,7 +238,7 @@ else:
         st.write(f"**Perfil del inversor:** Ambiental: {st.session_state.perfil_valores['Ambiental']}, " +
                  f"Social: {st.session_state.perfil_valores['Social']}, " +
                  f"Gobernanza: {st.session_state.perfil_valores['Gobernanza']}, " +
-                 f"Riesgo: {st.session_state.perfil_valores['Riesgo']}")
+                 f"Riesgo: {st.session_state.perfil_valores['Aversión al Riesgo']}")
 
     fig, ax = plt.subplots()
     ax.bar(st.session_state.perfil_valores.keys(), st.session_state.perfil_valores.values(), color="skyblue")
