@@ -11,6 +11,7 @@ import json
 from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 
+
 # Cargar variables de entorno
 load_dotenv()
 os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
