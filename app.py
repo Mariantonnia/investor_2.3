@@ -38,7 +38,7 @@ noticias = [
     "Las empresas 'borran' la ESG de sus presentaciones de resultados",
     "Duro Felguera activa un ERE para un máximo de 699 empleados en pleno preconcurso",
     "Iberdrola, elegida la empresa española con mejor gobierno corporativo por ‘World Finance’",
-    "El Ibex 35 sufre su mayor caída desde abril tras las amenazas de Trump a España por el gasto militar",
+    "Europa se prepara para fijar su objetivo de reducción de emisiones para el año 2040",
     "Cruz Roja y la Fundación Amancio Ortega palían la soledad de 13.000 mayores gracias a Voces en Red",
     '"Les haremos pagar el doble": la amenaza de Trump a España, el único país de la OTAN que se niega a gastar un 5% de su PIB en defensa'
 ]
