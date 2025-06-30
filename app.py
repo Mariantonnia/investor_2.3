@@ -80,21 +80,14 @@ prompt_perfil = PromptTemplate(template=plantilla_perfil, input_variables=["anal
 cadena_perfil = LLMChain(llm=llm, prompt=prompt_perfil)
 
 # Función para procesar respuestas válidas a las noticias
-def procesar_respuesta_valida(user_input, current_noticia):
-    pregunta_seguimiento = cadena_reaccion.run(noticia=current_noticia, reaccion=user_input).strip()
-    if st.session_state.contador_preguntas == 0:
-        with st.chat_message("bot", avatar="🤖"):
-            st.write(pregunta_seguimiento)
-        st.session_state.historial.append({"tipo": "bot", "contenido": pregunta_seguimiento})
-        st.session_state.pregunta_pendiente = True
-        st.session_state.contador_preguntas += 1
-    else:
-        st.session_state.reacciones.append(user_input)
-        st.session_state.contador += 1
-        st.session_state.mostrada_noticia = False
-        st.session_state.contador_preguntas = 0
-        st.session_state.pregunta_pendiente = False
-        st.rerun()
+def procesar_respuesta_valida(user_input):
+    # Esta función se llama cuando una reacción inicial a una noticia es evaluada como "True".
+    # La interacción de la noticia actual ya debería haber sido finalizada y añadida a chat_data_for_db por el llamador.
+    st.session_state.reacciones.append(user_input)
+    st.session_state.contador += 1
+    st.session_state.mostrada_noticia = False
+    st.session_state.pregunta_pendiente = False
+    st.rerun()
 
 # Inicializar estados
 if "historial" not in st.session_state:
@@ -102,11 +95,12 @@ if "historial" not in st.session_state:
     st.session_state.contador = 0
     st.session_state.reacciones = []
     st.session_state.mostrada_noticia = False
-    st.session_state.contador_preguntas = 0
     st.session_state.pregunta_general_idx = 0
     st.session_state.pregunta_pendiente = False
     st.session_state.cuestionario_enviado = False
     st.session_state.perfil_valores = {}
+    st.session_state.chat_data_for_db = []  # NUEVO: Para almacenar datos estructurados del chat para la DB
+    st.session_state.current_news_interaction = None # NUEVO: Para almacenar temporalmente la interacción de la noticia actual
 
 # Interfaz
 st.title("Chatbot de Análisis del perfil ESG y riesgo del inversor")
@@ -135,40 +129,84 @@ if st.session_state.pregunta_general_idx < len(preguntas_inversor):
     if user_input:
         st.session_state.historial.append({"tipo": "user", "contenido": user_input})
         st.session_state.reacciones.append(user_input)
+
+        # Almacenar la pregunta inicial y su respuesta en el log estructurado
+        st.session_state.chat_data_for_db.append({
+            "type": "initial_question",
+            "question": pregunta_actual,
+            "answer": user_input
+        })
+
         st.session_state.pregunta_general_idx += 1
         st.rerun()
 
 # Noticias ESG
 elif st.session_state.contador < len(noticias):
-    noticia_actual = noticias[st.session_state.contador] # Capturar la noticia actual
+    noticia_actual = noticias[st.session_state.contador]
+
     if not st.session_state.mostrada_noticia:
         texto_noticia = f"¿Qué opinas sobre esta noticia? {noticia_actual}"
         st.session_state.historial.append({"tipo": "bot", "contenido": texto_noticia})
         with st.chat_message("bot", avatar="🤖"):
             st.write(texto_noticia)
         st.session_state.mostrada_noticia = True
+        # Inicializar la interacción de la noticia actual
+        st.session_state.current_news_interaction = {
+            "type": "news_reaction",
+            "news_item": noticia_actual,
+            "bot_question": texto_noticia,
+            "user_initial_response": None,
+            "bot_followup_question": None,
+            "user_followup_response": None
+        }
 
     user_input = st.chat_input("Escribe tu respuesta aquí...")
     if user_input:
         st.session_state.historial.append({"tipo": "user", "contenido": user_input})
+
         if st.session_state.pregunta_pendiente:
+            # Esta es una respuesta a una pregunta de seguimiento
+            if st.session_state.current_news_interaction:
+                st.session_state.current_news_interaction["user_followup_response"] = user_input
+                st.session_state.chat_data_for_db.append(st.session_state.current_news_interaction) # Añadir interacción completa
+                st.session_state.current_news_interaction = None # Resetear para la siguiente noticia
+            else:
+                # Fallback, en caso de que current_news_interaction no esté configurado (debería estarlo)
+                st.session_state.chat_data_for_db.append({
+                    "type": "news_reaction",
+                    "news_item": noticia_actual, # Usar la noticia actual como referencia
+                    "bot_question": "Pregunta de seguimiento previa (desconocida)",
+                    "user_initial_response": "Respuesta inicial (desconocida)",
+                    "bot_followup_question": "Pregunta de seguimiento (desconocida)",
+                    "user_followup_response": user_input
+                })
+
+
             st.session_state.reacciones.append(user_input)
             st.session_state.contador += 1
             st.session_state.mostrada_noticia = False
-            st.session_state.contador_preguntas = 0
             st.session_state.pregunta_pendiente = False
             st.rerun()
         else:
+            # Esta es una respuesta inicial a un elemento de noticia
             evaluacion = cadena_evaluacion.run(respuesta=user_input).strip().lower()
+            if st.session_state.current_news_interaction:
+                st.session_state.current_news_interaction["user_initial_response"] = user_input
+
             if evaluacion == "false":
-                # Pasar la noticia_actual a cadena_reaccion
                 pregunta_ampliacion = cadena_reaccion.run(noticia=noticia_actual, reaccion=user_input).strip()
                 with st.chat_message("bot", avatar="🤖"):
                     st.write(pregunta_ampliacion)
                 st.session_state.historial.append({"tipo": "bot", "contenido": pregunta_ampliacion})
+                if st.session_state.current_news_interaction:
+                    st.session_state.current_news_interaction["bot_followup_question"] = pregunta_ampliacion
                 st.session_state.pregunta_pendiente = True
             else:
-                procesar_respuesta_valida(user_input, noticia_actual) # Pasar la noticia_actual
+                # Respuesta inicial válida, no se necesita seguimiento
+                if st.session_state.current_news_interaction:
+                    st.session_state.chat_data_for_db.append(st.session_state.current_news_interaction) # Añadir interacción completa
+                    st.session_state.current_news_interaction = None # Resetear para la siguiente noticia
+                procesar_respuesta_valida(user_input)
 
 # Perfil final y test tradicional
 else:
@@ -189,7 +227,7 @@ else:
         st.write(f"**Perfil del inversor:** Ambiental: {st.session_state.perfil_valores['Ambiental']}, " +
                  f"Social: {st.session_state.perfil_valores['Social']}, " +
                  f"Gobernanza: {st.session_state.perfil_valores['Gobernanza']}, " +
-                 f"Riesgo: {st.session_state.perfil_valores['Aversión al Riesgo']}") # Corregido de 'Aversión al Riesgo' a 'Riesgo'
+                 f"Riesgo: {st.session_state.perfil_valores['Aversión al Riesgo']}")
 
     fig, ax = plt.subplots()
     ax.bar(st.session_state.perfil_valores.keys(), st.session_state.perfil_valores.values(), color="skyblue")
@@ -211,7 +249,6 @@ else:
 
             formacion = st.radio("2.3. ¿Cuál es tu nivel de formación?",
                                  ["Educación no universitaria", "Educación universitaria o superior", "Educación universitaria o superior relacionada con los mercados financieros o la economía"],
-
                                  index=None)
 
             cargo = st.radio("2.4. ¿Trabajas o has trabajado en contacto directo con instrumentos o mercados financieros?",
@@ -247,15 +284,15 @@ else:
 
 
             sostenibilidad = st.radio("6.1. ¿Te interesa que tus inversiones consideren criterios de sostenibilidad?",
-                                     ["Sí", "No"],
-                                     index=None)
+                                         ["Sí", "No"],
+                                         index=None)
 
             fondo_clima = st.radio("6.2. ¿Cual de los siguientes aspectos te interesan que se tengan en cuenta?",
-                                     ["Relacionadas con el clima y el medioambiente", "Relacionadas con asuntos sociales y de gobernanza", "Ambas","Ninguna"],
-                                     index=None)
+                                         ["Relacionadas con el clima y el medioambiente", "Relacionadas con asuntos sociales y de gobernanza", "Ambas","Ninguna"],
+                                         index=None)
             porcentaje = st.radio("6.3. ¿Quieres incluir en tu cartera inversiones ESG?",
-                                     ["Si, al menos un 5%", "Si, al menos un 15%", "Si, al menos un 35%", "No"],
-                                     index=None)
+                                         ["Si, al menos un 5%", "Si, al menos un 15%", "Si, al menos un 35%", "No"],
+                                         index=None)
 
 
             enviar = st.form_submit_button("Enviar respuestas")
@@ -269,8 +306,11 @@ else:
                     client = gspread.authorize(creds)
                     sheet = client.open('BBDD_RESPUESTAS').sheet1
 
+                    # Preparar el historial de chat para guardar
+                    chat_history_string = json.dumps(st.session_state.chat_data_for_db, ensure_ascii=False)
 
-                    productos_str = ", ".join(productos)
+                    # El resto de productos_str ya está manejado arriba
+                    # productos_str = ", ".join(productos)
 
                     # Cálculo del puntaje total del test tradicional
                     puntos = 0
@@ -370,7 +410,7 @@ else:
                         "No": 0,
                         }.get(porcentaje, 0)
 
-                    fila = st.session_state.reacciones + [
+                    fila = [chat_history_string] + [ # Añadir el historial de chat como primer elemento
                         str(st.session_state.perfil_valores.get("Ambiental", "")),
                         str(st.session_state.perfil_valores.get("Social", "")),
                         str(st.session_state.perfil_valores.get("Gobernanza", "")),
@@ -398,5 +438,6 @@ else:
                     sheet.append_row(fila)
 
                     st.success("¡Formulario enviado correctamente!")
+                    st.session_state.cuestionario_enviado = True # Evitar reenvío
                 except Exception as e:
                     st.error(f"Error al guardar en Google Sheets: {e}")
