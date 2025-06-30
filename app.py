@@ -374,7 +374,7 @@ else:
                         str(st.session_state.perfil_valores.get("Ambiental", "")),
                         str(st.session_state.perfil_valores.get("Social", "")),
                         str(st.session_state.perfil_valores.get("Gobernanza", "")),
-                        str(st.session_state.perfil_valores.get("Riesgo", "")),
+                        str(st.session_state.perfil_valores.get("Aversión al Riesgo", "")),
                         objetivo or "",
                         horizonte or "",
                         formacion or "",
