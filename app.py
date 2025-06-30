@@ -76,7 +76,8 @@ plantilla_perfil = """
 Análisis de respuestas: {analisis}
 Genera un perfil detallado del inversor basado en las respuestas, teniendo en cuenta lo que se ha preguntado, enfocándote en los pilares ESG (Ambiental, Social y Gobernanza) y su aversión al riesgo.
 Asigna una puntuación de 0 a 100 para cada pilar ESG y para el riesgo, donde 0 indica ninguna preocupación y 100 máxima preocupación o aversión.
-Devuelve las 4 puntuaciones en formato: Ambiental: [puntuación], Social: [puntuación], Gobernanza: [puntuación], Riesgo: [puntuación]
+IMPORTANTE: Devuelve las 4 puntuaciones EXCLUSIVAMENTE en el siguiente formato, sin texto adicional:
+Ambiental: [puntuación], Social: [puntuación], Gobernanza: [puntuación], Riesgo: [puntuación]
 """
 prompt_perfil = PromptTemplate(template=plantilla_perfil, input_variables=["analisis"])
 cadena_perfil = LLMChain(llm=llm, prompt=prompt_perfil)
@@ -217,9 +218,6 @@ else:
         analisis_total = "\n".join(st.session_state.reacciones)
         perfil = cadena_perfil.run(analisis=analisis_total)
 
-        # IMPRIMIR LA SALIDA DEL LLM PARA DEPURACIÓN
-        st.write(f"Raw profile output from LLM: {perfil}")
-
         # Se añade un manejo de errores para cada búsqueda de expresión regular
         ambiental_match = re.search(r"Ambiental: (\d+)", perfil)
         social_match = re.search(r"Social: (\d+)", perfil)
@@ -233,6 +231,11 @@ else:
             "Aversión al Riesgo": int(riesgo_match.group(1)) if riesgo_match else 0,
         }
         st.session_state.perfil_valores = puntuaciones
+
+        # Si todas las puntuaciones son 0, mostrar un mensaje de advertencia
+        if all(value == 0 for value in puntuaciones.values()):
+            st.warning("No se pudo generar un perfil detallado. Por favor, asegúrese de proporcionar respuestas más completas.")
+
     # Mostrar perfil y gráfico siempre
     with st.chat_message("bot", avatar="🤖"):
         st.write(f"**Perfil del inversor:** Ambiental: {st.session_state.perfil_valores['Ambiental']}, " +
